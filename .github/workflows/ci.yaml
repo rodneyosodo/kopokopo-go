@@ -47,8 +47,6 @@ jobs:
 
     - name: Run tests
       run: go test -mod=vendor -v -race -vet=off  -covermode=count -coverprofile cover.out ./...
-      with:
-        go-version: ${{ matrix.go-version }}
     # - name: Convert coverage.out to coverage.lcov
     #   uses: jandelgado/gcov2lcov-action@v1.0.6
     # - name: Coveralls
