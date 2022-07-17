@@ -1,6 +1,7 @@
 package kopokopo
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -31,6 +32,40 @@ type SDK interface {
 
 	// Shows details about the token used for authentication.
 	TokenInformation(token string) (tokenInfo, error)
+
+	// Create a webhook subscription
+	CreateWebhook(token string, webookReq CreateWebhookReq) (string, error)
+
+	// Before processing webhook events, make sure that they originated from Kopo Kopo.
+	// Each request is signed with the api_key you got when creating an oauth application on the platform.
+	ValidateWebhook(webhookURL string) (BuyGoodsTrans, error)
+
+	// Notifies your application when a Buygoods Transaction has been received.
+	C2BSubscription(webhookURL string) (BuyGoodsTrans, error)
+
+	// Notifies your application when a B2b (External Till to Till transaction) has been received.
+	// These are payments recieved from other tills and not subscribers.
+	B2BSubscription(webhookURL string) (BuyGoodsTrans, error)
+
+	// Notifies your application when another Kopo Kopo merchant transfers funds
+	// to your Kopo Kopo merchant account (Merchant to Merchant)
+	M2MSubscription(webhookURL string) (BuyGoodsTrans, error)
+
+	// Notifies your application when a Buygoods Transaction has been reversed
+	C2BReversalSubscription(webhookURL string) (BuyGoodsTrans, error)
+
+	// Settlement Transfer Completed
+	SettlementSub(webhookURL string) (BuyGoodsTrans, error)
+
+	// Customer Created
+	CusomerCreationSub(webhookURL string) (CustomerReq, error)
+
+	// Receive payments from M-PESA users via STK Push.
+	ReceiveMpesaPayment(token string, receiveMpesaReq ReceiveMpesaReq) (string, error)
+
+	// With an Incoming Payment location url, you can query what the status of the Incoming Payment is.
+	// If a corresponding Incoming Payment Result exists, it will be bundled in the payload of the result.
+	QueryIncommingMpesaPayment(token, id string) (IncomingPaymentEvent, error)
 }
 
 // Credentials contains the credentials
@@ -68,12 +103,20 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk kSDK) makeRequest(req *http.Request, token string) ([]byte, error) {
+func (sdk kSDK) makeRequest(req *http.Request, token string) (*http.Response, error) {
 	if token != "" {
-		req.Header.Add("Authorization", "Basic "+token)
+		req.Header.Add("Authorization", "Bearer "+token)
 	}
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := sdk.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (sdk kSDK) getBodyParams(req *http.Request, token string) ([]byte, error) {
+	resp, err := sdk.makeRequest(req, token)
 	if err != nil {
 		return nil, err
 	}
@@ -83,4 +126,16 @@ func (sdk kSDK) makeRequest(req *http.Request, token string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 	return body, nil
+}
+
+func (sdk kSDK) getHeaderParams(req *http.Request, token string) (string, error) {
+	resp, err := sdk.makeRequest(req, token)
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != http.StatusCreated {
+		return "", errors.New("failed to created")
+	}
+	id := resp.Header.Get("Location")
+	return id, nil
 }

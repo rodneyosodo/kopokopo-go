@@ -1,161 +1,206 @@
 package kopokopo
 
-// type CreateWebhookReq struct {
-// 	EventType string `json:"event_type,omitempty"` //The type of event you are subscribing to
-// 	URL       string `json:"url,omitempty"`        // The http end point to send the webhook.
-// 	Scope     string `json:"scope,omitempty"`      // The scope of the webhook subscription.
-// 	ScopeRef  string `json:"scope_reference,omitempty"`
-// }
+import (
+	"errors"
+	"strings"
+)
 
-// func (cwr CreateWebhookReq) Validate() error {
-// 	if cwr.EventType != "buygoods_transaction_received" &&
-// 		cwr.EventType != "buygoods_transaction_reversed" &&
-// 		cwr.EventType != "b2b_transaction_received" &&
-// 		cwr.EventType != "m2m_transaction_received" &&
-// 		cwr.EventType != "settlement_transfer_completed" &&
-// 		cwr.EventType != "customer_created" {
-// 		return errors.New("invalid event type")
-// 	}
-// 	if !strings.HasPrefix(cwr.URL, "https") {
-// 		return errors.New("URL is not secured with TLS")
-// 	}
-// 	if cwr.Scope != "company" && cwr.Scope != "till" {
-// 		return errors.New("invalid scope")
-// 	}
-// 	if cwr.Scope == "till" && cwr.ScopeRef == "" {
-// 		return errors.New("scope reference is required")
-// 	}
-// 	return nil
-// }
+// CreateWebhookReq struct
+type CreateWebhookReq struct {
+	EventType string `json:"event_type,omitempty"` //The type of event you are subscribing to
+	URL       string `json:"url,omitempty"`        // The http end point to send the webhook.
+	Scope     string `json:"scope,omitempty"`      // The scope of the webhook subscription.
+	ScopeRef  string `json:"scope_reference,omitempty"`
+}
 
-// type Destination struct {
-// 	Type     string              `json:"type,omitempty"`
-// 	Resource DestinationResource `json:"resource,omitempty"`
-// }
+// Validate returns nil if the struct is valid
+func (cwr CreateWebhookReq) Validate() error {
+	if cwr.EventType != "buygoods_transaction_received" &&
+		cwr.EventType != "buygoods_transaction_reversed" &&
+		cwr.EventType != "b2b_transaction_received" &&
+		cwr.EventType != "m2m_transaction_received" &&
+		cwr.EventType != "settlement_transfer_completed" &&
+		cwr.EventType != "customer_created" {
+		return errors.New("invalid event type")
+	}
+	if !strings.HasPrefix(cwr.URL, "https") {
+		return errors.New("URL is not secured with TLS")
+	}
+	if cwr.Scope != "company" && cwr.Scope != "till" {
+		return errors.New("invalid scope")
+	}
+	if cwr.Scope == "till" && cwr.ScopeRef == "" {
+		return errors.New("scope reference is required")
+	}
+	return nil
+}
 
-// type DestinationResource struct {
-// 	Reference           string `json:"reference,omitempty"`         // The destination reference
-// 	AccountName         string `json:"account_name,omitempty"`      // The name as indicated on the bank account
-// 	AccountNumber       string `json:"account_number,omitempty"`    // The bank account number
-// 	BankBranchReference string `json:"bank_branch_ref,omitempty"`   // An identifier identifying the destination bank branch
-// 	SettlementMethod    string `json:"settlement_method,omitempty"` // EFT or RTS
-// 	FirstName           string `json:"first_name,omitempty"`        // String	First name of the recipient
-// 	LastName            string `json:"last_name,omitempty"`         // Last name of recipient
-// 	Email               string `json:"email,omitempty"`             // Email of recipient
-// 	PhoneNumber         string `json:"phone_number,omitempty"`      // Phone number
-// 	Network             string `json:"network,omitempty"`           // The mobile network to which the phone number belongs
-// }
+// Destination struct
+type Destination struct {
+	Type     string              `json:"type,omitempty"`
+	Resource DestinationResource `json:"resource,omitempty"`
+}
 
-// type Disbursements struct {
-// 	Status                 string `json:"status,omitempty"`                  // The status of the disbursement
-// 	Amount                 string `json:"amount,omitempty"`                  // The amount of the disbursement
-// 	OriginationTime        string `json:"origination_time,omitempty"`        // The Timestamp of when the transaction took place
-// 	TransactionalReference string `json:"transactional_reference,omitempty"` // The reference from the transaction. i.e mpesa reference It is null for eft transactions
-// }
+// DestinationResource struct
+type DestinationResource struct {
+	Reference           string `json:"reference,omitempty"`         // The destination reference
+	AccountName         string `json:"account_name,omitempty"`      // The name as indicated on the bank account
+	AccountNumber       string `json:"account_number,omitempty"`    // The bank account number
+	BankBranchReference string `json:"bank_branch_ref,omitempty"`   // An identifier identifying the destination bank branch
+	SettlementMethod    string `json:"settlement_method,omitempty"` // EFT or RTS
+	FirstName           string `json:"first_name,omitempty"`        // String	First name of the recipient
+	LastName            string `json:"last_name,omitempty"`         // Last name of recipient
+	Email               string `json:"email,omitempty"`             // Email of recipient
+	PhoneNumber         string `json:"phone_number,omitempty"`      // Phone number
+	Network             string `json:"network,omitempty"`           // The mobile network to which the phone number belongs
+}
 
-// type Resource struct {
-// 	ID                     string          `json:"id,omitempty"`        // The api reference of the transaction
-// 	Amount                 float64         `json:"amount,omitempty"`    // The amount of the transaction
-// 	Status                 string          `json:"status,omitempty"`    // The status of the transaction
-// 	System                 string          `json:"system,omitempty"`    // The mobile money system
-// 	Currency               string          `json:"currency,omitempty"`  // Currency
-// 	Reference              string          `json:"reference,omitempty"` // The mpesa reference
-// 	TransactionalReference string          `json:"transactional_reference,omitempty"`
-// 	TillNumber             string          `json:"till_number,omitempty"`  // The till number to which the payment was made
-// 	SendingTill            string          `json:"sending_till,omitempty"` // The till number of the sender
-// 	AccountName            string          `json:"account_name,omitempty"`
-// 	AccountNumber          string          `json:"account_number,omitempty"`
-// 	BankBranchReference    string          `json:"bank_branch_ref,omitempty"`
-// 	SettlementMethod       string          `json:"settlement_method,omitempty"`
-// 	SendingMerchant        string          `json:"sending_merchant,omitempty"`    // Name of merchant
-// 	SenderPhoneNumber      string          `json:"sender_phone_number,omitempty"` // The phone number that sent the payment
-// 	OriginationTime        string          `json:"origination_time,omitempty"`    // The transaction timestamp
-// 	SenderLastName         string          `json:"sender_last_name,omitempty"`    // Last name of payer
-// 	SenderFirstName        string          `json:"sender_first_name,omitempty"`   // First name of payer
-// 	SenderMiddleName       string          `json:"sender_middle_name,omitempty"`  // Middle name of payer
-// 	Destination            Destination     `json:"destination,omitempty"`         // The destination of the settlement transfer
-// 	Disbursements          []Disbursements `json:"disbursements,omitempty"`       // These are the disbursements in that particular transfer batch
-// }
+// Disbursements struct
+type Disbursements struct {
+	Status                 string `json:"status,omitempty"`                  // The status of the disbursement
+	Amount                 string `json:"amount,omitempty"`                  // The amount of the disbursement
+	OriginationTime        string `json:"origination_time,omitempty"`        // The Timestamp of when the transaction took place
+	TransactionalReference string `json:"transactional_reference,omitempty"` // The reference from the transaction. i.e mpesa reference It is null for eft transactions
+}
 
-// type Event struct {
-// 	Type     string   `json:"type,omitempty"`     // The type of transaction
-// 	Resource Resource `json:"resource,omitempty"` // The resource corresponding to the event.
-// }
+// Resource struct
+type Resource struct {
+	ID                     string          `json:"id,omitempty"`        // The api reference of the transaction
+	Amount                 float64         `json:"amount,omitempty"`    // The amount of the transaction
+	Status                 string          `json:"status,omitempty"`    // The status of the transaction
+	System                 string          `json:"system,omitempty"`    // The mobile money system
+	Currency               string          `json:"currency,omitempty"`  // Currency
+	Reference              string          `json:"reference,omitempty"` // The mpesa reference
+	TransactionalReference string          `json:"transactional_reference,omitempty"`
+	TillNumber             string          `json:"till_number,omitempty"`  // The till number to which the payment was made
+	SendingTill            string          `json:"sending_till,omitempty"` // The till number of the sender
+	AccountName            string          `json:"account_name,omitempty"`
+	AccountNumber          string          `json:"account_number,omitempty"`
+	BankBranchReference    string          `json:"bank_branch_ref,omitempty"`
+	SettlementMethod       string          `json:"settlement_method,omitempty"`
+	SendingMerchant        string          `json:"sending_merchant,omitempty"`    // Name of merchant
+	SenderPhoneNumber      string          `json:"sender_phone_number,omitempty"` // The phone number that sent the payment
+	OriginationTime        string          `json:"origination_time,omitempty"`    // The transaction timestamp
+	SenderLastName         string          `json:"sender_last_name,omitempty"`    // Last name of payer
+	SenderFirstName        string          `json:"sender_first_name,omitempty"`   // First name of payer
+	SenderMiddleName       string          `json:"sender_middle_name,omitempty"`  // Middle name of payer
+	Destination            Destination     `json:"destination,omitempty"`         // The destination of the settlement transfer
+	Disbursements          []Disbursements `json:"disbursements,omitempty"`       // These are the disbursements in that particular transfer batch
+}
 
-// type Links struct {
-// 	Self     string `json:"self,omitempty"`
-// 	Resource string `json:"resource,omitempty"`
-// 	Callback string `json:"callback_url,omitempty"`
-// }
+// Event struct
+type Event struct {
+	Type     string   `json:"type,omitempty"`     // The type of transaction
+	Resource Resource `json:"resource,omitempty"` // The resource corresponding to the event.
+}
 
-// type BuyGoodsTrans struct {
-// 	Topic     string `json:"topic,omitempty"`      // The ID of the Webhook Event
-// 	ID        string `json:"id,omitempty"`         // The topic of the webhook.
-// 	CreatedAt string `json:"created_at,omitempty"` // The timestamp of when the webhook event was created.
-// 	Event     Event  `json:"event,omitempty"`
-// 	Links     Links  `json:"_links,omitempty"` // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
-// }
+// Links struct
+type Links struct {
+	Self     string `json:"self,omitempty"`
+	Resource string `json:"resource,omitempty"`
+	Callback string `json:"callback_url,omitempty"`
+}
 
-// func (bgt BuyGoodsTrans) Validate() error {
-// 	return nil
-// }
+// BuyGoodsTrans struct
+type BuyGoodsTrans struct {
+	Topic     string `json:"topic,omitempty"`      // The ID of the Webhook Event
+	ID        string `json:"id,omitempty"`         // The topic of the webhook.
+	CreatedAt string `json:"created_at,omitempty"` // The timestamp of when the webhook event was created.
+	Event     Event  `json:"event,omitempty"`
+	Links     Links  `json:"_links,omitempty"` // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
+}
 
-// type CustomerResource struct {
-// 	LastName    string `json:"last_name,omitempty"`    // Last name of payer
-// 	FirstName   string `json:"first_name,omitempty"`   // First name of payer
-// 	MiddleName  string `json:"middle_name,omitempty"`  // Middle name of payer
-// 	PhoneNumber string `json:"phone_number,omitempty"` // The phone number that sent the payment
-// }
-// type CustomerEvent struct {
-// 	Type     string           `json:"type,omitempty"`     // The type of record (Mobile Money User)
-// 	Resource CustomerResource `json:"resource,omitempty"` // The resource corresponding to the event.
-// }
+// Validate returns nil if the struct is valid
+func (bgt BuyGoodsTrans) Validate() error {
+	return nil
+}
 
-// type CustomerReq struct {
-// 	Topic     string        `json:"topic,omitempty"`      // The ID of the Webhook Event
-// 	ID        string        `json:"id,omitempty"`         // The topic of the webhook.
-// 	CreatedAt string        `json:"created_at,omitempty"` // The timestamp of when the webhook event was created.
-// 	Event     CustomerEvent `json:"event,omitempty"`
-// 	Links     Links         `json:"_links,omitempty"` // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
-// }
+// CustomerResource struct
+type CustomerResource struct {
+	LastName    string `json:"last_name,omitempty"`    // Last name of payer
+	FirstName   string `json:"first_name,omitempty"`   // First name of payer
+	MiddleName  string `json:"middle_name,omitempty"`  // Middle name of payer
+	PhoneNumber string `json:"phone_number,omitempty"` // The phone number that sent the payment
+}
 
-// type Subscriber struct {
-// 	LastName    string `json:"last_name,omitempty"`    // Last name of the subscriber
-// 	FirstName   string `json:"first_name,omitempty"`   // First name of the subscriber
-// 	MiddleName  string `json:"middle_name,omitempty"`  // Middle name of the subscriber
-// 	PhoneNumber string `json:"phone_number,omitempty"` // The phone number of the subscriber from which the payment will be made
-// 	Email       string `json:"email,omitempty"`        // E-mail address of the subscriber - optional
-// }
+// CustomerEvent struct
+type CustomerEvent struct {
+	Type     string           `json:"type,omitempty"`     // The type of record (Mobile Money User)
+	Resource CustomerResource `json:"resource,omitempty"` // The resource corresponding to the event.
+}
 
-// type Amount struct {
-// 	Value    string `json:"value,omitempty"`    // The amount of the transaction
-// 	Currency string `json:"currency,omitempty"` // Currency
-// }
-// type ReceiveMpesaReq struct {
-// 	PaymentChannel string                 `json:"payment_channel,omitempty"` // The payment channel to be used eg. M-PESA
-// 	TillNumber     string                 `json:"till_number,omitempty"`     // The online payments till number from the Kopo Kopo dashboard to which the payment will be made
-// 	Subscriber     Subscriber             `json:"subscriber,omitempty"`      // A Subscriber JSON object see below
-// 	Amount         Amount                 `json:"amount,omitempty"`          // An Amount JSON object containing currency and amount
-// 	Metadata       map[string]interface{} `json:"metadata,omitempty"`        // An optional JSON object containing a maximum of 5 key value pairs
-// 	Links          Links                  `json:"_links,omitempty"`          // A JOSN object containing the call back URL where the result of the Incoming Payment will be posted
-// }
+// CustomerReq struct
+type CustomerReq struct {
+	Topic     string        `json:"topic,omitempty"`      // The ID of the Webhook Event
+	ID        string        `json:"id,omitempty"`         // The topic of the webhook.
+	CreatedAt string        `json:"created_at,omitempty"` // The timestamp of when the webhook event was created.
+	Event     CustomerEvent `json:"event,omitempty"`
+	Links     Links         `json:"_links,omitempty"` // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
+}
+
+// Subscriber struct
+type Subscriber struct {
+	LastName    string `json:"last_name,omitempty"`    // Last name of the subscriber
+	FirstName   string `json:"first_name,omitempty"`   // First name of the subscriber
+	MiddleName  string `json:"middle_name,omitempty"`  // Middle name of the subscriber
+	PhoneNumber string `json:"phone_number,omitempty"` // The phone number of the subscriber from which the payment will be made
+	Email       string `json:"email,omitempty"`        // E-mail address of the subscriber - optional
+}
+
+// Amount struct
+type Amount struct {
+	Value    string `json:"value,omitempty"`    // The amount of the transaction
+	Currency string `json:"currency,omitempty"` // Currency
+}
+
+// ReceiveMpesaReq struct
+type ReceiveMpesaReq struct {
+	PaymentChannel string                 `json:"payment_channel,omitempty"` // The payment channel to be used eg. M-PESA
+	TillNumber     string                 `json:"till_number,omitempty"`     // The online payments till number from the Kopo Kopo dashboard to which the payment will be made
+	Subscriber     Subscriber             `json:"subscriber,omitempty"`      // A Subscriber JSON object see below
+	Amount         Amount                 `json:"amount,omitempty"`          // An Amount JSON object containing currency and amount
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`        // An optional JSON object containing a maximum of 5 key value pairs
+	Links          Links                  `json:"_links,omitempty"`          // A JOSN object containing the call back URL where the result of the Incoming Payment will be posted
+}
+
+// Validate returns nil if the struct is valid
+func (rmr ReceiveMpesaReq) Validate() error {
+	return nil
+}
+
+// IncomingPaymentEvent struct
+type IncomingPaymentEvent struct {
+	Type       string    `json:"type,omitempty"` // The ID of the Webhook Event
+	ID         string    `json:"id,omitempty"`   // The topic of the webhook.
+	Attributes Attribute `json:"attributes,omitempty"`
+}
+
+// Attribute struct
+type Attribute struct {
+	InitiationTime string                 `json:"initiation_time,omitempty"` // The timestamp of when the webhook event was created.
+	Status         string                 `json:"status,omitempty"`          // A status string denoting the status of the Incoming Payment
+	Resource       Resource               `json:"resource,omitempty"`        // A JSON Object encapsulating the event of the request
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`        // An optional JSON object containing a maximum of 5 key value pairs
+	Links          Links                  `json:"_links,omitempty"`          // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
+
+}
 
 // type IncomingPaymentEvent struct {
 // 	Type     string   `json:"type,omitempty"`     // The type of record (Mobile Money User)
 // 	Resource Resource `json:"resource,omitempty"` // The resource corresponding to the event.
 // 	Errors   string   `json:"errors,omitempty"`   // A string containing information on the error than occured
-
 // }
 
-// type ProcessIncommingPaymentReq struct {
-// 	Topic          string                 `json:"topic,omitempty"`           // The topic of the request.
-// 	ID             string                 `json:"id,omitempty"`              // The ID of the Incoming Payment
-// 	InitiationTime string                 `json:"initiation_time,omitempty"` // The timestamp of when the webhook event was created.
-// 	Status         string                 `json:"status,omitempty"`          // A status string denoting the status of the Incoming Payment
-// 	Event          IncomingPaymentEvent   `json:"event,omitempty"`           // A JSON Object encapsulating the event of the request
-// 	Metadata       map[string]interface{} `json:"metadata,omitempty"`        // An optional JSON object containing a maximum of 5 key value pairs
-// 	Links          Links                  `json:"_links,omitempty"`          // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
-// }
+// ProcessIncommingPaymentReq struct
+type ProcessIncommingPaymentReq struct {
+	Topic          string                 `json:"topic,omitempty"`           // The topic of the request.
+	ID             string                 `json:"id,omitempty"`              // The ID of the Incoming Payment
+	InitiationTime string                 `json:"initiation_time,omitempty"` // The timestamp of when the webhook event was created.
+	Status         string                 `json:"status,omitempty"`          // A status string denoting the status of the Incoming Payment
+	Event          IncomingPaymentEvent   `json:"event,omitempty"`           // A JSON Object encapsulating the event of the request
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`        // An optional JSON object containing a maximum of 5 key value pairs
+	Links          Links                  `json:"_links,omitempty"`          // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
+}
 
 // type PaymentRecipient struct {
 // 	LastName             string `json:"last_name,omitempty"`              // Last name of the recipient

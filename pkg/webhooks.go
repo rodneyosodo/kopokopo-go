@@ -1,40 +1,170 @@
+// Package kopokopo Webhooks are a means of getting notified of events in the Kopo Kopo application.
+// To receive webhooks, you need to create a webhook subscription.
 package kopokopo
 
-// func (sdk kSDK) CreateWebhook(webookReq CreateWebhookReq) (string, error) {
-// 	panic("Not implemented")
-// }
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"strings"
+)
 
-// // Before processing webhook events, make sure that they originated from Kopo Kopo
-// func (sdk kSDK) ValidateWebhook() error {
-// 	panic("Not implemented")
-// }
+var webhookSubsEndpoint = "api/v1/webhook_subscriptions"
 
-// // Notifies your application when a Buygoods Transaction has been received.
-// func (sdk kSDK) C2BSubscription(buyGoodsReq BuyGoodsTrans) (string, error) {
-// 	panic("Not implemented")
-// }
+func (sdk kSDK) CreateWebhook(token string, webookReq CreateWebhookReq) (string, error) {
+	if err := webookReq.Validate(); err != nil {
+		return "", err
+	}
+	endpoint := fmt.Sprintf("%s/%s", sdk.baseURL, webhookSubsEndpoint)
+	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
+	if err != nil {
+		return "", err
+	}
+	url, err := sdk.getHeaderParams(req, token)
+	if err != nil {
+		return "", err
+	}
+	id := strings.TrimPrefix(url, fmt.Sprintf("%s/%s/", sdk.baseURL, webhookSubsEndpoint))
+	return id, nil
+}
 
-// // Notifies your application when a B2b (External Till to Till transaction) has been received.
-// // These are payments recieved from other tills and not subscribers.
-// func (sdk kSDK) B2BSubscription(b2bReq BuyGoodsTrans) (string, error) {
-// 	panic("Not implemented")
-// }
+func (sdk kSDK) ValidateWebhook(webhookURL string) (BuyGoodsTrans, error) {
+	if webhookURL == "" {
+		return BuyGoodsTrans{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	var bgt BuyGoodsTrans
+	if err := json.Unmarshal(resp, &bgt); err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	return bgt, nil
+}
 
-// // Notifies your application when another Kopo Kopo merchant transfers funds to your Kopo Kopo merchant account (Merchant to Merchant)
-// func (sdk kSDK) M2MSubscription(m2mReq BuyGoodsTrans) (string, error) {
-// 	panic("Not implemented")
-// }
+func (sdk kSDK) C2BSubscription(webhookURL string) (BuyGoodsTrans, error) {
+	if webhookURL == "" {
+		return BuyGoodsTrans{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	var bgt BuyGoodsTrans
+	if err := json.Unmarshal(resp, &bgt); err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	return bgt, nil
+}
 
-// // Notifies your application when a Buygoods Transaction has been reversed
-// func (sdk kSDK) C2BReversalSubscription(c2bReq BuyGoodsTrans) error {
-// 	panic("Not implemented")
-// }
+func (sdk kSDK) B2BSubscription(webhookURL string) (BuyGoodsTrans, error) {
+	if webhookURL == "" {
+		return BuyGoodsTrans{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	var bgt BuyGoodsTrans
+	if err := json.Unmarshal(resp, &bgt); err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	return bgt, nil
+}
 
-// // Parameters contained in a settlement_transfer_completed webhook
-// func (sdk kSDK) SettlementSub(setReq BuyGoodsTrans) error {
-// 	panic("Not implemented")
-// }
+func (sdk kSDK) M2MSubscription(webhookURL string) (BuyGoodsTrans, error) {
+	if webhookURL == "" {
+		return BuyGoodsTrans{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	var bgt BuyGoodsTrans
+	if err := json.Unmarshal(resp, &bgt); err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	return bgt, nil
+}
 
-// func (sdk kSDK) CusomerCreationSub(cReq CustomerReq) error {
-// 	panic("Not implemented")
-// }
+func (sdk kSDK) C2BReversalSubscription(webhookURL string) (BuyGoodsTrans, error) {
+	if webhookURL == "" {
+		return BuyGoodsTrans{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	var bgt BuyGoodsTrans
+	if err := json.Unmarshal(resp, &bgt); err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	return bgt, nil
+}
+
+func (sdk kSDK) SettlementSub(webhookURL string) (BuyGoodsTrans, error) {
+	if webhookURL == "" {
+		return BuyGoodsTrans{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	var bgt BuyGoodsTrans
+	if err := json.Unmarshal(resp, &bgt); err != nil {
+		return BuyGoodsTrans{}, err
+	}
+	return bgt, nil
+}
+
+func (sdk kSDK) CusomerCreationSub(webhookURL string) (CustomerReq, error) {
+	if webhookURL == "" {
+		return CustomerReq{}, errors.New("empty webhook url")
+	}
+	req, err := http.NewRequest(http.MethodPost, webhookURL, nil)
+	if err != nil {
+		return CustomerReq{}, err
+	}
+	req.Header.Add("X-KopoKopo-Signature", sdk.credentials.APIKey)
+	resp, err := sdk.getBodyParams(req, "")
+	if err != nil {
+		return CustomerReq{}, err
+	}
+	var cr CustomerReq
+	if err := json.Unmarshal(resp, &cr); err != nil {
+		return CustomerReq{}, err
+	}
+	return cr, nil
+}

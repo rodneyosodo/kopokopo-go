@@ -10,6 +10,7 @@ import (
 
 var tokenEndpoint = "oauth"
 
+// https://sandbox.kopokopo.com/oauth/token?grant_type=client_credentials&client_id={{CLIENT-ID}}&client_secret={{CLIENT-SECRET}}
 func (sdk kSDK) GetToken() (string, error) {
 	q := url.Values{}
 	q.Add("client_id", sdk.credentials.AppID)
@@ -21,7 +22,7 @@ func (sdk kSDK) GetToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := sdk.makeRequest(req, "")
+	resp, err := sdk.getBodyParams(req, "")
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +48,7 @@ func (sdk kSDK) RevokeToken(token string) error {
 	if err != nil {
 		return err
 	}
-	_, err = sdk.makeRequest(req, "")
+	_, err = sdk.getBodyParams(req, "")
 	if err != nil {
 		return err
 	}
@@ -62,13 +63,13 @@ func (sdk kSDK) TokenIntrospection(token string) (tokenIntrospectionResp, error)
 	q.Add("client_id", sdk.credentials.AppID)
 	q.Add("client_secret", sdk.credentials.Secret)
 	q.Add("token", token)
-	endpoint := fmt.Sprintf("%s/%s/token/info?%s", sdk.baseURL, tokenEndpoint, q.Encode())
+	endpoint := fmt.Sprintf("%s/%s/token/introspect?%s", sdk.baseURL, tokenEndpoint, q.Encode())
 
 	req, err := http.NewRequest(http.MethodPost, endpoint, nil)
 	if err != nil {
 		return tokenIntrospectionResp{}, err
 	}
-	resp, err := sdk.makeRequest(req, "")
+	resp, err := sdk.getBodyParams(req, "")
 	if err != nil {
 		return tokenIntrospectionResp{}, err
 	}
@@ -90,7 +91,7 @@ func (sdk kSDK) TokenInformation(token string) (tokenInfo, error) {
 	if err != nil {
 		return tokenInfo{}, err
 	}
-	resp, err := sdk.makeRequest(req, token)
+	resp, err := sdk.getBodyParams(req, token)
 	if err != nil {
 		return tokenInfo{}, err
 	}
