@@ -3,12 +3,14 @@ package kopokopo
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 )
 
+var mpesaEndpoint = "api/v1/incoming_payments"
+
+// ReceiveMpesaPayment Receive payments from M-PESA users via STK Push.
 func (sdk kSDK) ReceiveMpesaPayment(token string, receiveMpesaReq ReceiveMpesaReq) (string, error) {
 	if err := receiveMpesaReq.Validate(); err != nil {
 		return "", err
@@ -17,31 +19,32 @@ func (sdk kSDK) ReceiveMpesaPayment(token string, receiveMpesaReq ReceiveMpesaRe
 	if err != nil {
 		return "", err
 	}
-	endpoint := fmt.Sprintf("%s/api/v1/incoming_payments", sdk.baseURL)
-	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(data))
+	url := fmt.Sprintf("%s/%s", sdk.baseURL, mpesaEndpoint)
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 	if err != nil {
 		return "", err
 	}
-	url, err := sdk.getHeaderParams(req, token)
+	locationURL, err := sdk.getHeaderParams(req, token)
 	if err != nil {
 		return "", err
 	}
-	id := strings.TrimPrefix(url, fmt.Sprintf("%s/api/v1/incoming_payments/", sdk.baseURL))
+	id := strings.TrimPrefix(locationURL, fmt.Sprintf("%s/%s/", sdk.baseURL, mpesaEndpoint))
 	return id, nil
 }
 
-// func (sdk kSDK) ProcessIncommingMpesaPayment(grantType string) (string, error) {
-// 	panic("Not implemented")
-// }
+// ProcessIncommingMpesaPayment Process Incoming Payment Result
+func (sdk kSDK) ProcessIncommingMpesaPayment(grantType string) (string, error) {
+	panic("Not implemented")
+}
 
+// QueryIncommingMpesaPayment Query Incoming Payment Status
 func (sdk kSDK) QueryIncommingMpesaPayment(token, id string) (IncomingPaymentEvent, error) {
 	if id == "" {
-		return IncomingPaymentEvent{}, errors.New("empty id")
+		return IncomingPaymentEvent{}, ErrEmptyID
 	}
 
-	endpoint := fmt.Sprintf("%s/api/v1/incoming_payments/", sdk.baseURL)
-
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
+	url := fmt.Sprintf("%s/%s/", sdk.baseURL, mpesaEndpoint)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return IncomingPaymentEvent{}, err
 	}

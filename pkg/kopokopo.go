@@ -17,10 +17,8 @@ type SDK interface {
 
 	// The client credentials flow is the simplest OAuth 2 grant,
 	// with a server-to-server exchange of your application’s client_id, client_secret
-	// for an OAuth application access token. In order to execute this flow,
-	// you will need to make an HTTP request from your application server,
-	// to the Kopo Kopo authorization server.
-	GetToken() (string, error)
+	// for an OAuth application access token.
+	GetToken() (tokenResp, error)
 
 	// The request is used to revoke a particular token at a time.
 	RevokeToken(token string) error
@@ -63,9 +61,21 @@ type SDK interface {
 	// Receive payments from M-PESA users via STK Push.
 	ReceiveMpesaPayment(token string, receiveMpesaReq ReceiveMpesaReq) (string, error)
 
+	// ProcessIncommingMpesaPayment After a Incoming Payment is initiated,
+	// a Incoming Payment Result will be posted asynchronously to the call back URL specified in the Incoming Payment.
+	ProcessIncommingMpesaPayment(grantType string) (string, error)
+
 	// With an Incoming Payment location url, you can query what the status of the Incoming Payment is.
 	// If a corresponding Incoming Payment Result exists, it will be bundled in the payload of the result.
 	QueryIncommingMpesaPayment(token, id string) (IncomingPaymentEvent, error)
+
+	// AddPayRecipients Add external entities that will be the destination of your payments.
+	AddPayRecipients(token string, recipient AddPAYRecipient) (string, error)
+
+	// CreatePayment Create an outgoing payment to a third party.
+	// The final result of the Payment will be posted asynchronously to your systems
+	// via the call back URL provided in the request.
+	CreatePayment(token string, payment CreatePaymentReq) (string, error)
 }
 
 // Credentials contains the credentials
@@ -103,20 +113,20 @@ func NewSDK(conf Config) SDK {
 	}
 }
 
-func (sdk kSDK) makeRequest(req *http.Request, token string) (*http.Response, error) {
+func (sdk kSDK) makeRequest(req *http.Request, token string) (*http.Response, int, error) {
 	if token != "" {
 		req.Header.Add("Authorization", "Bearer "+token)
 	}
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := sdk.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
-	return resp, nil
+	return resp, resp.StatusCode, nil
 }
 
 func (sdk kSDK) getBodyParams(req *http.Request, token string) ([]byte, error) {
-	resp, err := sdk.makeRequest(req, token)
+	resp, _, err := sdk.makeRequest(req, token)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +139,7 @@ func (sdk kSDK) getBodyParams(req *http.Request, token string) ([]byte, error) {
 }
 
 func (sdk kSDK) getHeaderParams(req *http.Request, token string) (string, error) {
-	resp, err := sdk.makeRequest(req, token)
+	resp, _, err := sdk.makeRequest(req, token)
 	if err != nil {
 		return "", err
 	}

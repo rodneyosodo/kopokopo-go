@@ -165,6 +165,12 @@ type ReceiveMpesaReq struct {
 
 // Validate returns nil if the struct is valid
 func (rmr ReceiveMpesaReq) Validate() error {
+	if rmr.PaymentChannel != "M-PESA" {
+		return ErrInvalidPaymentChannel
+	}
+	if len(rmr.Metadata) > 5 {
+		return ErrMaxMetadataSize
+	}
 	return nil
 }
 
@@ -202,38 +208,62 @@ type ProcessIncommingPaymentReq struct {
 	Links          Links                  `json:"_links,omitempty"`          // A JSON object containing links to the Webhook Event and the corresponding Buygoods Transaction resource
 }
 
-// type PaymentRecipient struct {
-// 	LastName             string `json:"last_name,omitempty"`              // Last name of the recipient
-// 	FirstName            string `json:"first_name,omitempty"`             // First name of the recipient
-// 	MiddleName           string `json:"middle_name,omitempty"`            // Middle name of the recipient
-// 	PhoneNumber          string `json:"phone_number,omitempty"`           // The phone number of the recipient from which the payment will be made
-// 	Email                string `json:"email,omitempty"`                  // E-mail address of the recipient - optional
-// 	AccountName          string `json:"account_name,omitempty"`           //The name as indicated on the bank account name
-// 	BankBranchReference  string `json:"bank_branch_ref,omitempty"`        // An identifier identifying the destination bank branch.
-// 	AccountNumber        string `json:"account_number,omitempty"`         // The bank account number
-// 	SettlementMethod     string `json:"settlement_method,omitempty"`      // RTS
-// 	TillName             string `json:"till_name,omitempty"`              // The name as indicated on the till
-// 	TillNumber           string `json:"till_number,omitempty"`            // The till number
-// 	PayBillName          string `json:"paybill_name,omitempty"`           // The name referring to the paybill
-// 	PayBillNumber        string `json:"paybill_number,omitempty"`         // The paybill business number
-// 	PayBillAccountNumber string `json:"paybill_account_number,omitempty"` // The paybill account number
-// }
+// PaymentRecipient struct comprises of Mobile Wallet, Bank Account, External Till and Paybill recipients
+type PaymentRecipient struct {
+	// Mobile Wallet
+	LastName    string `json:"last_name,omitempty"`    // Last name of the recipient
+	FirstName   string `json:"first_name,omitempty"`   // First name of the recipient
+	MiddleName  string `json:"middle_name,omitempty"`  // Middle name of the recipient
+	PhoneNumber string `json:"phone_number,omitempty"` // The phone number of the recipient from which the payment will be made
+	Email       string `json:"email,omitempty"`        // E-mail address of the recipient - optional
+	Network     string `json:"network,omitempty"`      // The mobile network to which the phone number belongs
+	// Bank Account
+	AccountName         string `json:"account_name,omitempty"`      //The name as indicated on the bank account name
+	BankBranchReference string `json:"bank_branch_ref,omitempty"`   // An identifier identifying the destination bank branch.
+	AccountNumber       string `json:"account_number,omitempty"`    // The bank account number
+	SettlementMethod    string `json:"settlement_method,omitempty"` // RTS
+	// External Till
+	TillName   string `json:"till_name,omitempty"`   // The name as indicated on the till
+	TillNumber string `json:"till_number,omitempty"` // The till number
+	// Paybill
+	PayBillName          string `json:"paybill_name,omitempty"`           // The name referring to the paybill
+	PayBillNumber        string `json:"paybill_number,omitempty"`         // The paybill business number
+	PayBillAccountNumber string `json:"paybill_account_number,omitempty"` // The paybill account number
+}
 
-// type AddPAYRecipient struct {
-// 	Type             string           `json:"type,omitempty"`              // The type of the recipient eg. mobile wallet or bank account
-// 	PaymentRecipient PaymentRecipient `json:"payment_recipient,omitempty"` // 	A JSON object containing details of the recipeint
-// }
+// AddPAYRecipient struct
+type AddPAYRecipient struct {
+	Type             string           `json:"type,omitempty"`              // The type of the recipient eg. mobile wallet or bank account
+	PaymentRecipient PaymentRecipient `json:"payment_recipient,omitempty"` // 	A JSON object containing details of the recipeint
+}
 
-// type CreatePaymentReq struct {
-// 	DestinationType      string                 `json:"destination_type,omitempty"`      // Pay recipient type (bank_account, mobile_wallet, till or paybill
-// 	DestinationReference string                 `json:"destination_reference,omitempty"` // Reference for the destination.
-// 	Amount               Amount                 `json:"amount,omitempty"`                // A JSON object containing the currency and the amount to be transferred
-// 	Description          string                 `json:"description,omitempty"`           // A reason for the payment
-// 	Category             string                 `json:"category,omitempty"`              // Categorize the transaction
-// 	Tags                 string                 `json:"tags,omitempty"`                  // Define your own tag to label the transaction with
-// 	Metadata             map[string]interface{} `json:"metadata,omitempty"`              // A JSON containing upto a maximum of 5 key-value pairs for your own use
-// 	Links                Links                  `json:"_links,omitempty"`                // A JSON containing a call back URL where the results of the Payment will be posted. MUST be a secure HTTPS (TLS) endpoint
-// }
+// Validate returns nil if the struct is valid
+func (apr AddPAYRecipient) Validate() error {
+	if apr.PaymentRecipient.SettlementMethod != "" && apr.PaymentRecipient.SettlementMethod != "RTS" {
+		return ErrInvalidSettlementMethod
+	}
+	return nil
+}
+
+// CreatePaymentReq struct
+type CreatePaymentReq struct {
+	DestinationType      string                 `json:"destination_type,omitempty"`      // Pay recipient type (bank_account, mobile_wallet, till or paybill
+	DestinationReference string                 `json:"destination_reference,omitempty"` // Reference for the destination.
+	Amount               Amount                 `json:"amount,omitempty"`                // A JSON object containing the currency and the amount to be transferred
+	Description          string                 `json:"description,omitempty"`           // A reason for the payment
+	Category             string                 `json:"category,omitempty"`              // Categorize the transaction
+	Tags                 string                 `json:"tags,omitempty"`                  // Define your own tag to label the transaction with
+	Metadata             map[string]interface{} `json:"metadata,omitempty"`              // A JSON containing upto a maximum of 5 key-value pairs for your own use
+	Links                Links                  `json:"_links,omitempty"`                // A JSON containing a call back URL where the results of the Payment will be posted. MUST be a secure HTTPS (TLS) endpoint
+}
+
+// Validate returns nil if the struct is valid
+func (cpr CreatePaymentReq) Validate() error {
+	if len(cpr.Metadata) > 5 {
+		return ErrMaxMetadataSize
+	}
+	return nil
+}
 
 // type MerchantBankAccountReq struct {
 // }
